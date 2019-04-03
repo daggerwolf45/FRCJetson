@@ -1,3 +1,3 @@
 #!/bin/bash
-touch -rf /home/ubuntu/FRCJetson/019GRiP/build/ic_pipeline.stop
+touch /home/nvidia/FRCJetson/2019GRiP/build/ic_pipeline.stop
 exit

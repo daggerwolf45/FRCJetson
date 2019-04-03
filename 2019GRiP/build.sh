@@ -3,8 +3,12 @@
 YELLOW='\033[1;33m'	#Colors
 NC='\033[0m'
 
-cd ~/FRCJetson/2019GRiP/build/	#Enters Build dir
-if [ -d "/home/ubuntu/FRCJetson/2019GRiP/build/CMakeFiles" ]; then	#Checks for pre-existing build
+if [[ ! -d "build" ]]; then
+	mkdir build
+fi
+
+cd build/	#Enters Build dir
+if [ -d "build/CMakeFiles" ]; then	#Checks for pre-existing build
 	echo -e "${YELLOW}Found Pre-existing Build${NC}"
 	echo -e "${YELLOW}Deleting Previous Build${NC}"
 	rm -rf *

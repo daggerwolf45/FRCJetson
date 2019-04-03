@@ -8,7 +8,7 @@ include_directories(${OpenCV_INCLUDE_DIRS} network_tables/network_tables/include
 
 add_executable(ic_pipeline ic_pipeline.cpp GripPipeline.cpp)
 
-target_link_libraries(ic_pipeline ${OpenCV_LIBS} /home/ubuntu/FRCJetson/2019GRiP/network_tables/network_tables/Linux/arm/libntcore.so)
+target_link_libraries(ic_pipeline ${OpenCV_LIBS} ~/FRCJetson/2019GRiP/network_tables/network_tables/Linux/arm/libntcore.so)
 
 add_definitions(-Wall -std=c++11 -lstdc++ -lntcore -pthread)
 

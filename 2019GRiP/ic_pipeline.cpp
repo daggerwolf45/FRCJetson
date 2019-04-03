@@ -38,7 +38,7 @@ int main( int argc, char *argv[] )
   // setup network tables connection
   auto nt = NetworkTable::GetTable("JETSON");
   nt->SetClientMode();
-  nt->SetIPAddress("10.6.63.2\n");
+  nt->SetIPAddress("10.6.63.1\n");
   nt->Initialize();
   std::this_thread::sleep_for(std::chrono::seconds(5));
 

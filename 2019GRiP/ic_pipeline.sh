@@ -1,9 +1,13 @@
 #!/bin/bash
 
 datestr=$(date +%m-%d-%Y_%H:%M:%S)
-homedir="/home/ubuntu/FRCJetson/2019GRiP"
+homedir="/home/nvidia/FRCJetson/2019GRiP"
 
-cd /home/ubuntu/FRCJetson/2019GRiP/
+if [[ ! -d "logs" ]]; then
+	mkdir logs
+fi
+
+cd ${homedir}
 if [ -f ${homedir}/build/ic_pipeline.stop ]; then
 	rm -rf ${homedir}/build/ic_pipeline.stop
 fi
