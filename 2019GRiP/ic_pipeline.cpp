@@ -83,7 +83,7 @@ int main( int argc, char *argv[] )
  				cy[2] = bry[2]+brh[2]/2;
       	
       	tcx = (cx[1]+cx[2])/2;
-      	tcy = (cy[2]+cy[2])/2;
+      	tcy = (cy[1]+cy[2])/2;
       	cout << "Center of BOTH pieces of tape! (x,y)" << endl;
       	cout << "(" << tcx << "," << tcy << ")" << endl;
       	
