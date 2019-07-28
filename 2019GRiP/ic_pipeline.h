@@ -8,9 +8,10 @@
 #include <chrono>
 #include <cstdio>
 #include <thread>
-#include "ntcore.h"
 
-#include "networktables/NetworkTable.h"
+#include <networktables/NetworkTable.h>
+#include <ntcore.h>
+#include <cscore.h>
 
 using namespace cv;
 using namespace std;

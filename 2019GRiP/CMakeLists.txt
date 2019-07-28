@@ -4,11 +4,10 @@ project(ic_pipeline)
 
 find_package(OpenCV REQUIRED)
 
-include_directories(${OpenCV_INCLUDE_DIRS} network_tables/network_tables/include )
+include_directories(${OpenCV_INCLUDE_DIRS} /usr/include/ )
 
 add_executable(ic_pipeline ic_pipeline.cpp GripPipeline.cpp)
 
-target_link_libraries(ic_pipeline ${OpenCV_LIBS} ~/FRCJetson/2019GRiP/network_tables/network_tables/Linux/arm/libntcore.so)
-
-add_definitions(-Wall -std=c++11 -lstdc++ -lntcore -pthread)
-
+LINK_DIRECTORIES(~/FRCJetson/2019GRiP/network_tables/Linux/arm/ntcore /usr/lib)
+target_link_libraries(ic_pipeline ${OpenCV_LIBS} ~/FRCJetson/2019GRiP/network_tables/Linux/arm/libntcore.so)
+add_definitions(-pthread -Wall -std=c++14 -lstdc++ -lntcore -lwpiutil -lcscore)
