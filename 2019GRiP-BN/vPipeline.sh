@@ -12,4 +12,4 @@ if [ -f ${homedir}/build/ic_pipeline.stop ]; then
 	rm -rf ${homedir}/build/Pipeline.stop
 fi
 	cd ${homedir}/build	# Run
-	./ic_pipeline >> ${homedir}/logs/ic_pipeline_${datestr}.log 2>&1
+	./vPipeline >> ${homedir}/logs/ic_pipeline_${datestr}.log 2>&1

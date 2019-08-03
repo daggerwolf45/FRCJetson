@@ -2,9 +2,7 @@
 
 using namespace cv;
 using namespace std;
-using namespace cs;
 
-RNG rng(12345);
 int debug = 0;
 int contourcount = 0;
 double brx[5];
@@ -15,18 +13,15 @@ double cx[2];
 double cy[2];
 double tcx = 0.0;
 double tcy = 0.0;
+string robotIP = "127.0.0.1";
 
-ICPipeline::ICPipeline(){
-
-}
-
-void PublishNetworkTables(shared_ptr<NetworkTable> table) {
-	table->PutNumber("test", 1);
+vPipeline::vPipeline(){
+    
 }
 
 int main( int argc, char *argv[] )
 {
-
+    
   // handle command line arguments
     if( ( argc > 1 ) && ( strcmp( argv[1], "--debug" ) == 0 ) )
         debug = 1;
@@ -34,17 +29,13 @@ int main( int argc, char *argv[] )
   //Setup Image Pipeline
     cout << "Setting up pipeline (1/2)" << endl;
     cv::Mat img;
-    grip::GripPipeline ic_pipeline;
+    grip::GripPipeline vPipeline;
     cv::VideoCapture input(0);
 
   
     //Setup NetworkTables
-    cout << "Setting up networktables (2/2)" << endl;
-    NetworkTable::SetClientMode();
-    NetworkTable::SetTeam(663);
-    NetworkTable::SetIPAddress("10.6.63.1/n");
-    NetworkTable::Initialize();
-    auto visionTable = NetworkTable::GetTable("JETSON");
+    cout << "Setting up networking (2/2)" << endl;
+    //bn::setup(robotIP);
     std::this_thread::sleep_for(std::chrono::seconds(5));
     cout << "Finished Setup" << endl;
   
@@ -57,11 +48,11 @@ int main( int argc, char *argv[] )
         break;
   	
     // STEP 2: setup image pipeline
-    //ic_pipeline.setsource0(img);
-    ic_pipeline.Process(img);	
+    //vPipeline.setsource0(img);
+    vPipeline.Process(img);	
     
     // STEP 3: obtain intermediate images and countour vectors
-    std::vector<std::vector<cv::Point> >* img_filtercontours = ic_pipeline.GetFilterContoursOutput();
+    std::vector<std::vector<cv::Point> >* img_filtercontours = vPipeline.GetFilterContoursOutput();
 		
     cout <<	"Attempting to find centerX and centerY of each contour" << endl;
     contourcount = 0;
@@ -78,7 +69,7 @@ int main( int argc, char *argv[] )
         brh[contourcount] = br.height;
     }
     
-    cout << "contourcount = " << contourcount << endl; 
+    cout << "contourcount = " << contourcount << endl;
        
 
     if(contourcount == 2) {

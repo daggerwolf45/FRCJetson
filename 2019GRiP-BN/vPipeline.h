@@ -1,3 +1,6 @@
+#ifndef VPIPELINE_H
+#define VPIPELINE_H
+
 #include <opencv2/imgproc/imgproc.hpp>
 #include <opencv2/highgui/highgui.hpp>
 #include "GripPipeline.h"
@@ -11,15 +14,17 @@
 
 #include <cscore.h>
 
+#include "basicNetworking.h"
+
 using namespace cv;
 using namespace std;
 
-class ICPipeline {
-	private:
-	
-	public:
-		ICPipeline();
+class vPipeline {
+    private:
+    
+    public:
+        vPipeline();
 
 };
 
-
+#endif
