@@ -6,25 +6,29 @@
 #include "GripPipeline.h"
 #include <ctime>
 #include <iostream>
-#include <fstream>
-
 #include <chrono>
-#include <cstdio>
 #include <thread>
+#include <cstdio>
 
-#include <cscore.h>
+#define robotIP "127.0.0.1"
 
 #include "basicNetworking.h"
 
-using namespace cv;
 using namespace std;
 
 class vPipeline {
     private:
-    
+        
     public:
         vPipeline();
 
+};
+
+class testC{
+    private:
+    
+    public:
+        void testF(string var);
 };
 
 #endif

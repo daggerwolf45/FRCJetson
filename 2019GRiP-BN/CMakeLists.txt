@@ -10,4 +10,4 @@ add_executable(vPipeline basicNetworking.cpp vPipeline.cpp GripPipeline.cpp)
 
 LINK_DIRECTORIES(/usr/lib)
 target_link_libraries(vPipeline ${OpenCV_LIBS} )
-add_definitions(-pthread -Wall -std=c++11 -lstdc++ -lntcore -lwpiutil -lcscore)
+add_definitions(-pthread -Wall -std=c++11 -lstdc++)

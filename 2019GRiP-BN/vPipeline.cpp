@@ -1,6 +1,5 @@
 #include "vPipeline.h"
 
-using namespace cv;
 using namespace std;
 
 int debug = 0;
@@ -13,7 +12,8 @@ double cx[2];
 double cy[2];
 double tcx = 0.0;
 double tcy = 0.0;
-string robotIP = "127.0.0.1";
+
+basicNetworking bn;
 
 vPipeline::vPipeline(){
     
@@ -35,7 +35,7 @@ int main( int argc, char *argv[] )
   
     //Setup NetworkTables
     cout << "Setting up networking (2/2)" << endl;
-    //bn::setup(robotIP);
+    bn.setup(robotIP);
     std::this_thread::sleep_for(std::chrono::seconds(5));
     cout << "Finished Setup" << endl;
   

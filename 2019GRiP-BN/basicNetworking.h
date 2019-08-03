@@ -1,30 +1,29 @@
 #ifndef BASICNETWORKING_H
 #define BASICNETWORKING_H
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <unistd.h>
-#include <errno.h>
+#include <stdio.h> 
+#include <sys/socket.h> 
+#include <arpa/inet.h> 
+#include <unistd.h> 
+#include <string.h> 
 #include <iostream>
-#include <netdb.h>
-#include <sys/types.h>
-#include <netinet/in.h>
-#include <sys/socket.h>
-#include <arpa/inet.h>
 
-#define PORT "663"
-#define MAXDATASIZE 100
+#define PORT 663                //Port number
+#define MAXDATASIZE 100         //Max data in bytes
+#define BN_AFIP AF_INET         //ipv4(inet) or ipv6(inet6)
+#define BN_PROT SOCK_STREAM     //tcp(stream) or udp (dpack)
 
 using namespace std;
 
-class bn {
+class basicNetworking {
     private:
-       void getInAddr(struct sockaddr *sa);
+        
     public:
-        bn();
+        basicNetworking();
         int setup(string ip);
-        int sendDouble(double foo);
-        int sendInt(int foo);
+        int sendChar(char data);
+        int sendDouble(double num);
+        int sendInt(int num);
     
 };
 
