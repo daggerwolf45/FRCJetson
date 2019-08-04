@@ -35,7 +35,7 @@ int main( int argc, char *argv[] )
   
     //Setup NetworkTables
     cout << "Setting up networking (2/2)" << endl;
-    bn.setup(robotIP);
+    bn.setupClient(robotIP);
     std::this_thread::sleep_for(std::chrono::seconds(5));
     cout << "Finished Setup" << endl;
   

@@ -4,9 +4,9 @@ project(vPipeline)
 
 find_package(OpenCV REQUIRED)
 
-include_directories(${OpenCV_INCLUDE_DIRS} /usr/include/ )
+include_directories(${OpenCV_INCLUDE_DIRS} /usr/include/ include BasicNetworking/include)
 
-add_executable(vPipeline basicNetworking.cpp vPipeline.cpp GripPipeline.cpp)
+add_executable(vPipeline BasicNetworking/basicNetworking.cpp vPipeline.cpp GripPipeline.cpp)
 
 LINK_DIRECTORIES(/usr/lib)
 target_link_libraries(vPipeline ${OpenCV_LIBS} )
