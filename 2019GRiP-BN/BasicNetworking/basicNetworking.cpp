@@ -5,6 +5,13 @@
 
 bool isClient;
 bool isSetup = false;
+
+bool useCompression;
+int compresionAlg;      //(0 = b64pack, 1 = zstd)
+
+//bool useEncryption;       TODO
+//int encryptionAlg;        TODO
+
 int sockfd = 0, valread; 
 const char *servIP;
 
@@ -175,7 +182,6 @@ int basicNetworking::sendFloat(float num){
     }
 }
 
-
 int basicNetworking::sendDouble(double num){
     if(isSetup){
         if(isClient){
@@ -189,4 +195,20 @@ int basicNetworking::sendDouble(double num){
         cout << "BN Error: No server connection found, please run setup" << endl;
         return -1;
     }
+}
+
+/*
+ * Compresion and encryption support            TODO
+ */
+
+int basicNetworking::compressData(int alg, bool enable){
+    if(!enable){
+        useCompression = 0;
+        return 0;
+    }
+    if()
+}
+
+int basicNetworking::encryptData(int alg, bool enable){
+    
 }
