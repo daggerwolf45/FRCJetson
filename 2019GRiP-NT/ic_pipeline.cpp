@@ -22,7 +22,7 @@ double cy[2];
 double tcx = 0.0;
 double tcy = 0.0;
 
-//bool icNTMode = 1; 
+nt::NetworkTableInstance NetTI;
 
 ICPipeline::ICPipeline(){
 
@@ -31,31 +31,23 @@ ICPipeline::ICPipeline(){
 int main( int argc, char *argv[] )
 {
 
-  // handle command line arguments
-  if( ( argc > 1 ) && ( strcmp( argv[1], "--debug" ) == 0 ) )
+    // handle command line arguments
+    if( ( argc > 1 ) && ( strcmp( argv[1], "--debug" ) == 0 ) )
     debug = 1;
-	
-  //Setup Image Pipeline
-  cout << "Setting up pipeline (1/2)" << endl;
-  cv::Mat img;
-  grip::GripPipeline ic_pipeline;
-  cv::VideoCapture input(0);
+    
+    //Setup Image Pipeline
+    cout << "Setting up pipeline (1/2)" << endl;
+    cv::Mat img;
+    grip::GripPipeline ic_pipeline;
+    cv::VideoCapture input(0);
 
   
-	//Setup NetworkTables
-	cout << "Setting up networktables (2/2)" << endl;
-	//if(icNTMode){
-		nt::NetworkTableInstance inst = nt::NetworkTableInstance::GetDefault();
-		auto table = inst.GetTable("JETSON");
-  	inst.StartClientTeam(663);
-  //}
-  //else{
-  //	NetworkTable::SetClientMode();
-	//	NetworkTable::SetTeam(663);
-	//	NetworkTable::SetIPAddress("10.6.63.1/n");
-	//	auto nt = NetworkTable::GetTable("JETSON");
-	//	NetworkTable::Initialize();
-  //}
+    //Setup NetworkTables
+    cout << "Setting up networktables (2/2)" << endl;
+    NetTI inst = NetTI::GetDefault();
+    auto table = inst.GetTable("JETSON");
+    inst.StartClientTeam(663);
+  
   std::this_thread::sleep_for(std::chrono::seconds(5));
   cout << "Finished Setup" << endl;
   
@@ -64,12 +56,12 @@ int main( int argc, char *argv[] )
   
   for (;;)
   {
- 		 	
- 		// STEP 1: fetch image
- 		if(!input.read(img))
-      break;
+    
+    // STEP 1: fetch image
+    if(!input.read(img))
+    break;
   	
-	  // STEP 2: setup image pipeline
+    // STEP 2: setup image pipeline
     //ic_pipeline.setsource0(img);
     ic_pipeline.Process(img);	
     
@@ -78,42 +70,40 @@ int main( int argc, char *argv[] )
 		
     cout <<	"Attempting to find centerX and centerY of each contour" << endl;
     contourcount = 0;
-    for (std::vector<cv::Point> contour: *img_filtercontours)
-    {
-    	contourcount++;
-    	cout << "Light tape " << contourcount << " (x,y):(w,h)" << endl;
-      cv::Rect br = boundingRect(contour);
+    for (std::vector<cv::Point> contour: *img_filtercontours){
+        contourcount++;
+        cout << "Light tape " << contourcount << " (x,y):(w,h)" << endl;
+        cv::Rect br = boundingRect(contour);
       
-      cout << "(" << br.x << "," << br.y << "):(" << br.width << "," << br.height << ")" << endl; 
+        cout << "(" << br.x << "," << br.y << "):(" << br.width << "," << br.height << ")" << endl; 
       
-      brx[contourcount] = br.x;
-      bry[contourcount] = br.y;
-      brw[contourcount] = br.width;
-      brh[contourcount] = br.height;
+        brx[contourcount] = br.x;
+        bry[contourcount] = br.y;
+        brw[contourcount] = br.width;
+        brh[contourcount] = br.height;
     }
     
     cout << "contourcount = " << contourcount << endl; 
        
 
- 			if(contourcount == 2) {
+    if(contourcount == 2) {
         cx[1] = brx[1]+brw[1]/2;
-      	cy[1] = bry[1]+brh[1]/2; 			
- 				cx[2] = brx[2]+brw[2]/2;
- 				cy[2] = bry[2]+brh[2]/2;
+        cy[1] = bry[1]+brh[1]/2;
+        cx[2] = brx[2]+brw[2]/2;
+        cy[2] = bry[2]+brh[2]/2;
       	
-      	tcx = (cx[1]+cx[2])/2;
-      	tcy = (cy[1]+cy[2])/2;
-      	cout << "Center of BOTH pieces of tape! (x,y)" << endl;
-      	cout << "(" << tcx << "," << tcy << ")" << endl;
-      	
-      	cout << "Updating NetworkTables";
+        tcx = (cx[1]+cx[2])/2;
+        tcy = (cy[1]+cy[2])/2;
+        cout << "Center of BOTH pieces of tape! (x,y)" << endl;
+        cout << "(" << tcx << "," << tcy << ")" << endl;
+            
+        cout << "Updating NetworkTables";
       	table->GetNumber( "centerX", tcx );
       	table->GetNumber( "centerY", tcy );
- 			} else {
- 				table->GetNumber( "centerX", 0 );
+ 	} else {
+ 	table->GetNumber( "centerX", 0 );
       	table->GetNumber( "centerY", 0 );
- 			}
- 			
+ 	}
   }
   
 
