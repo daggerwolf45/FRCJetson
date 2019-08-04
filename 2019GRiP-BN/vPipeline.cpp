@@ -83,12 +83,12 @@ int main( int argc, char *argv[] )
       	cout << "Center of BOTH pieces of tape! (x,y)" << endl;
       	cout << "(" << tcx << "," << tcy << ")" << endl;
       	
-      	cout << "Updating NetworkTables";
-      	//nt->PutNumber( "centerX", tcx );
-      	//nt->PutNumber( "centerY", tcy );
+      	cout << "Sending center to robot";
+        bn.sendDouble(tcx);
+        bn.sendDouble(tcy);
         } else {
- 	//nt->PutNumber( "centerX", 0 );
-      	//nt->PutNumber( "centerY", 0 );
+ 	bn.sendDouble(0.0);
+        bn.sendDouble(0.0);
         }
 
     }

@@ -10,7 +10,8 @@
 #include <thread>
 #include <cstdio>
 
-#define robotIP "127.0.0.1"
+#define robotIP "10.6.63.2"
+#define port 663
 
 #include "basicNetworking.h"
 
