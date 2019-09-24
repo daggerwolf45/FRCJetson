@@ -9,9 +9,11 @@
 #include <chrono>
 #include <thread>
 #include <cstdio>
+#include <string>
+#include <sstream>
 
-#define robotIP "10.6.63.2"
-#define port 663
+#define robotIP "127.0.0.1"
+#define PORT 663
 
 #include "basicNetworking.h"
 
@@ -23,13 +25,6 @@ class vPipeline {
     public:
         vPipeline();
 
-};
-
-class testC{
-    private:
-    
-    public:
-        void testF(string var);
 };
 
 #endif

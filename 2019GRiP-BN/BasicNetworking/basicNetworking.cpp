@@ -5,15 +5,19 @@
 
 bool isClient;
 bool isSetup = false;
+int userPort = BN_PORT;
+string sesKey;
 
-bool useCompression;
+bool useCompression = false;
 int compresionAlg;      //(0 = b64pack, 1 = zstd)
 
-//bool useEncryption;       TODO
-//int encryptionAlg;        TODO
+bool useEncryption = false;
+int encryptionAlg;      //(0 = nes, 1 = des, 2 = aes)
 
 int sockfd = 0, valread; 
+int new_socket;
 const char *servIP;
+char buffer[MAXDATASIZE] = {0};
 
 using namespace std;
 
@@ -31,7 +35,7 @@ int basicNetworking::setupClient(string strIP){
         close(sockfd);
         isSetup = false;
     }
-    int sockfd = 0, valread; 
+    int sockfd = 0, valread;
     struct sockaddr_in serv_addr; 
     char buffer[1024] = {0}; 
     
@@ -42,7 +46,7 @@ int basicNetworking::setupClient(string strIP){
     } 
     
     serv_addr.sin_family = BN_AFIP;                 //Set ipv4/ipv6
-    serv_addr.sin_port = htons(BN_PORT);               //Set port
+    serv_addr.sin_port = htons(userPort);
     
     if(inet_pton(AF_INET, servIP, &serv_addr.sin_addr) <= 0)          //Convert ip addr to binary
     { 
@@ -67,69 +71,169 @@ int basicNetworking::setupClient(string strIP){
 }
 
 int basicNetworking::setupServer(){
-    int server_fd, new_socket, valread; 
+    int serverfd, new_socket, valread; 
     struct sockaddr_in address; 
     int addrlen = sizeof(address); 
     int opt = 1;
-    char buffer[1024] = {0};
    
-    if ((server_fd = socket(BN_AFIP, BN_PROT, 0)) == 0){ 
+    if ((serverfd = socket(BN_AFIP, BN_PROT, 0)) == 0){ 
         perror("socket failed"); 
         exit(EXIT_FAILURE); 
     } 
     
     // Forcefully attaching socket to the port 8080 
-    if (setsockopt(server_fd, SOL_SOCKET, SO_REUSEADDR | SO_REUSEPORT, &opt, sizeof(opt))){ 
+    if (setsockopt(serverfd, SOL_SOCKET, SO_REUSEADDR | SO_REUSEPORT, &opt, sizeof(opt))){ 
         perror("setsockopt"); 
         exit(EXIT_FAILURE); 
     } 
     address.sin_family = BN_AFIP; 
     address.sin_addr.s_addr = INADDR_ANY; 
-    address.sin_port = htons(BN_PORT); 
+    address.sin_port = htons(userPort);
     
     // Forcefully attaching socket to the port 8080 
-    if (bind(server_fd, (struct sockaddr *)&address, sizeof(address))<0){ 
+    if (bind(serverfd, (struct sockaddr *)&address, sizeof(address))<0){ 
         perror("bind failed"); 
         exit(EXIT_FAILURE); 
     } 
     
     //Listen for connection
-    if (listen(server_fd, 3) < 0){ 
+    if (listen(serverfd, 3) < 0){ 
         perror("listen"); 
         exit(EXIT_FAILURE); 
     } 
     
-    if ((new_socket = accept(server_fd, (struct sockaddr *)&address, (socklen_t*)&addrlen))<0){ 
+    if ((new_socket = accept(serverfd, (struct sockaddr *)&address, (socklen_t*)&addrlen))<0){ 
         perror("accept"); 
         exit(EXIT_FAILURE); 
     } 
     
-    valread = read( new_socket , buffer, 1024); 
-    printf("%s\n",buffer );
+
     
     isSetup = true;
     isClient = false;
     return 0;
-  
+    
+     
+    // printf("%s\n",buffer );
     //send(new_socket , hello , strlen(hello) , 0 ); 
     //printf("Hello message sent\n"); 
     //return 0;
 }
 
+int basicNetworking::usePort(int port){
+    userPort = port;
+    return 0;
+}
+
+void basicNetworking::quit(){
+    close(sockfd);
+}
+
+int basicNetworking::genKey(){
+    srand(time(0)*userPort);
+    int ikey = rand();
+    string sesKey = to_string(ikey);
+    return 0;
+}
+
 /*
- * Send types of data
+ * Reformat and send/recive data
  */
 
-int basicNetworking::sendChar(char chr){
+int basicNetworking::sendData(string type, string name, string data){
+    /* NOTE 
+     * Sends data in the format: 
+     * useCompression(0/1) compresionAlg(int) useEncryption(0/1) encryptionAlg(int) dataType("double") name("coolNumber") data("420.69")
+     * 0 0 0 0 double coolNumber 420.69
+     * 
+     * If compression or encryption is used the type, name and data will be compressed first then encrypted
+     */
+    
+    stringstream dataStream;
+    stringstream mergeData;
+    int curSock;
+    
+    if (isClient) curSock = sockfd;                                         //Sets socket
+    else curSock = new_socket;
+    
+    mergeData << name << " " << type << " " << data;                        //Combines type, name and data into one string
+    data = mergeData.str();                                                 //Sets combined string as data
+    
+    if(useCompression){
+        data = compress(data, compresionAlg);                               //Compresses data
+        dataStream << int(useCompression) << " " << compresionAlg << " ";   //Adds compression and algorithm used, to dataStream
+    }
+    else {
+        dataStream << 0 << " " << 0 << " ";                                 //Adds that no compresion was used, to datasteam
+    }
+    
+    if(useEncryption){
+        data = encrypt(data, encryptionAlg);                                //Encrypts data
+        dataStream << int(useEncryption) << " " << encryptionAlg << " ";    //Adds encryption and algorithm used, to dataStream
+    }
+    else {                          
+        dataStream << 0 << " " << 0 << " ";                                 //Adds that no encryption was used, to dataStream
+    }
+    
+    dataStream << data;                                                     //Adds data to dataStream
+    
+    const char *formatedData = dataStream.str().c_str();                    //Formats dataSteam as a char* 
+    send(curSock, formatedData, strlen(formatedData), 0);                    //Sends formatedData to open socket
+    return 0;
+}
+
+int basicNetworking::recvData(int sock){
+     /* NOTE 
+     * Recives data in the format: 
+     * useCompression(0/1) compresionAlg(int) useEncryption(0/1) encryptionAlg(int) dataType("double") name("coolNumber") data("420.69")
+     * 0 0 0 0 double coolNumber 420.69
+     * 
+     * If compression or encryption is used, the type, name and data will be decrypted first then uncompressed
+     */
+    stringstream unformatedData;
+    bool compresed;
+    int compAlg;
+    bool encrypted;
+    int encryptAlg;
+    string rawData;
+    string strBuf;
+    
+    valread = read(sock, buffer, MAXDATASIZE);                          //Get data from network
+    unformatedData.str(buffer);                                         //Converts char* to string
+    unformatedData >> compresed >> compAlg >> encrypted >> encryptAlg;  //Strips encryption and compression from data
+    unformatedData >> rawData;                                          //Strips type into rawData string
+    unformatedData >> strBuf; rawData.append(" "+strBuf);               //Strips name into rawData string
+    unformatedData >> strBuf; rawData.append(" "+strBuf);               //Strips data into rawData string
+    
+    if(encrypted){
+        rawData = decrypt(rawData, encryptionAlg);                      //Decrypts if encrypted
+    }
+    
+    if(compresed){
+        rawData = uncompress(rawData, encryptionAlg);                   //Uncompresses if compressed
+    }
+    
+    putData(rawData);                                                   //Runs putData() so data can be indexed
+    return 0;
+}
+
+int basicNetworking::putData(string data){
+    return 0;
+}
+
+/*
+ * Choose type of data
+ */
+
+int basicNetworking::sendChar(string name, char chr){
     if(isSetup){
         if(isClient){
             string foo;
             foo.push_back(chr);
-            const char *data = foo.c_str();
-            send(sockfd , data , strlen(data) , 0);
+            sendData("char", name, foo);
             return 0;
         }
-        else{}
+        else{return 0;}
     } 
     else {
         cout << "BN Error: No server connection found, please run setup" << endl;
@@ -137,14 +241,13 @@ int basicNetworking::sendChar(char chr){
     }
 }
 
-int basicNetworking::sendStr(string str){
+int basicNetworking::sendStr(string name, string str){
     if(isSetup){
         if(isClient){
-            const char *data = str.c_str();
-            if(send(sockfd , data , strlen(data) , 0) < 0);
+            sendData("string", name, str);
             return 0;
         }
-        else{}
+        else{return 0;}
     } 
     else {
         cout << "BN Error: No server connection found, please run setup" << endl;
@@ -152,14 +255,13 @@ int basicNetworking::sendStr(string str){
     }
 }
 
-int basicNetworking::sendInt(int num){
+int basicNetworking::sendInt(string name, int num){
     if(isSetup){
         if(isClient){
-            const char *data = to_string(num).c_str();
-            if(send(sockfd , data , strlen(data) , 0) < 0);
+            sendData("int", name, to_string(num));
             return 0;
         }
-        else{}
+        else{return 0;}
     } 
     else {
         cout << "BN Error: No server connection found, please run setup" << endl;
@@ -167,14 +269,13 @@ int basicNetworking::sendInt(int num){
     }
 }
 
-int basicNetworking::sendFloat(float num){
+int basicNetworking::sendFloat(string name, float num){
     if(isSetup){
         if(isClient){
-            const char *data = to_string(num).c_str();
-            if(send(sockfd , data , strlen(data) , 0) < 0);
+            sendData("float", name, to_string(num));
             return 0;
         }
-        else{}
+        else{return 0;}
     } 
     else {
         cout << "BN Error: No server connection found, please run setup" << endl;
@@ -182,14 +283,13 @@ int basicNetworking::sendFloat(float num){
     }
 }
 
-int basicNetworking::sendDouble(double num){
+int basicNetworking::sendDouble(string name, double num){
     if(isSetup){
         if(isClient){
-            const char *data = to_string(num).c_str();
-            if(send(sockfd , data , strlen(data) , 0) < 0);
+            sendData("double", name, to_string(num));
             return 0;
         }
-        else{}
+        else{return 0;}
     } 
     else {
         cout << "BN Error: No server connection found, please run setup" << endl;
@@ -201,14 +301,59 @@ int basicNetworking::sendDouble(double num){
  * Compresion and encryption support            TODO
  */
 
+
 int basicNetworking::compressData(int alg, bool enable){
     if(!enable){
         useCompression = 0;
         return 0;
     }
-    if()
+    if(useCompression){
+        if(alg == compresionAlg){
+            return 0;
+        }
+    }
+   
+    useCompression = true;
+    compresionAlg = alg;
+    return 0;
+}
+
+string basicNetworking::compress(string data, int compresionAlg){
+    //char *foo;
+    //size_t foolen = get_message(&foo);
+    //b64pack_compress(foo, &foolen);
+    
+    string compressedData;
+    return compressedData;
+}
+
+string basicNetworking::uncompress(string compressedData, int compresionAlg){
+    string data;
+    return data;
 }
 
 int basicNetworking::encryptData(int alg, bool enable){
-    
+    if(!enable){
+        useEncryption = 0;
+        return 0;
+    }
+    if(useEncryption){
+        if(alg == encryptionAlg){
+            return 0;
+        }
+    }
+   
+    useEncryption = true;
+    encryptionAlg = alg;
+    return 0;
+}
+
+string basicNetworking::encrypt(string data, int encryptionAlg){
+    string encryptedData;
+    return encryptedData;
+}
+
+string basicNetworking::decrypt(string encryptedData, int encryptionAlg){
+    string data;
+    return data;
 }

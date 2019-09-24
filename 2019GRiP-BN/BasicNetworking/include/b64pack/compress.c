@@ -23,7 +23,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "b64pack.h"
+#include "include/b64pack.h"
 
 static char *table1 = "@$_!\"#%&'()*+,-./:;<=>?\n";
 static char *table2 = "[\\]^{|}~`\t";

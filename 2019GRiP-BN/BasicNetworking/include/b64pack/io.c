@@ -22,7 +22,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#include "b64pack.h"
+#include "include/b64pack.h"
 
 size_t get_message(char **msg)
 {

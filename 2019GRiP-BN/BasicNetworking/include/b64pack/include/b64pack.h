@@ -22,24 +22,31 @@
 #ifndef _B64PACK_H_
 #define _B64PACK_H_
 
-/* input and output */
-
 #define MSG_MINLEN       4
 #define MSG_BLKSIZE   1024
-
-size_t get_message(char **);
-void   put_message(const char *, size_t);
-
-/* compression and decompression */
 
 #define OP_COMPRESS      0
 #define OP_DECOMPRESS    1
 
-void b64pack_compress(char *, size_t *);
-void b64pack_decompress(char *, size_t *);
+
+
+/* input and output */
+
+        size_t get_message(char **);
+        void   put_message(const char *, size_t);
+        int runb64pack(int argc, char *argv[]);
+        
+        void b64pack_compress(char *, size_t *);
+        void b64pack_decompress(char *, size_t *);
+
+
+/* compression and decompression */
+
+
+
+
 
 /* error handling */
-
 #define ERROR_INPUT   "Invalid input. Accepting only printable characters"
 #define ERROR_TRANS   "Invalid character in transcoded message"
 #define ERROR_LENGTH  "Input too short. Expecting at least 4 characters"
