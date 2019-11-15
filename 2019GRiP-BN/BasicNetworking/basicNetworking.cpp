@@ -143,8 +143,8 @@ int basicNetworking::genKey(){
 int basicNetworking::sendData(string type, string name, string data){
     /* NOTE 
      * Sends data in the format: 
-     * useCompression(0/1) compresionAlg(int) useEncryption(0/1) encryptionAlg(int) dataType("double") name("coolNumber") data("420.69")
-     * 0 0 0 0 double coolNumber 420.69
+     * PROT_VER(int) useCompression(0/1) compresionAlg(int) useEncryption(0/1) encryptionAlg(int) dataType("double") name("coolNumber") data("420.69")
+     * 1 0 0 0 0 double coolNumber 420.69
      * 
      * If compression or encryption is used the type, name and data will be compressed first then encrypted
      */
@@ -159,6 +159,8 @@ int basicNetworking::sendData(string type, string name, string data){
     mergeData << name << " " << type << " " << data;                        //Combines type, name and data into one string
     data = mergeData.str();                                                 //Sets combined string as data
     
+    datastream << PROT_VER << " ";
+
     if(useCompression){
         data = compress(data, compresionAlg);                               //Compresses data
         dataStream << int(useCompression) << " " << compresionAlg << " ";   //Adds compression and algorithm used, to dataStream
@@ -185,12 +187,13 @@ int basicNetworking::sendData(string type, string name, string data){
 int basicNetworking::recvData(int sock){
      /* NOTE 
      * Recives data in the format: 
-     * useCompression(0/1) compresionAlg(int) useEncryption(0/1) encryptionAlg(int) dataType("double") name("coolNumber") data("420.69")
-     * 0 0 0 0 double coolNumber 420.69
+     * PROT_VER(int) useCompression(0/1) compresionAlg(int) useEncryption(0/1) encryptionAlg(int) dataType("double") name("coolNumber") data("420.69")
+     * 1 0 0 0 0 double coolNumber 420.69
      * 
      * If compression or encryption is used, the type, name and data will be decrypted first then uncompressed
      */
     stringstream unformatedData;
+    int vers
     bool compresed;
     int compAlg;
     bool encrypted;
@@ -198,12 +201,15 @@ int basicNetworking::recvData(int sock){
     string rawData;
     string strBuf;
     
-    valread = read(sock, buffer, MAXDATASIZE);                          //Get data from network
-    unformatedData.str(buffer);                                         //Converts char* to string
-    unformatedData >> compresed >> compAlg >> encrypted >> encryptAlg;  //Strips encryption and compression from data
-    unformatedData >> rawData;                                          //Strips type into rawData string
-    unformatedData >> strBuf; rawData.append(" "+strBuf);               //Strips name into rawData string
-    unformatedData >> strBuf; rawData.append(" "+strBuf);               //Strips data into rawData string
+    valread = read(sock, buffer, MAXDATASIZE);                              //Get data from network
+    unformatedData.str(buffer);                                             //Converts char* to string
+    unformatedData >> vers                                                  //Strips protocol version
+    if (vers = 1){
+        unformatedData >> compresed >> compAlg >> encrypted >> encryptAlg;  //Strips encryption and compression from data
+        unformatedData >> rawData;                                          //Strips type into rawData string
+        unformatedData >> strBuf; rawData.append(" "+strBuf);               //Strips name into rawData string
+        unformatedData >> strBuf; rawData.append(" "+strBuf);               //Strips data into rawData string
+    }
     
     if(encrypted){
         rawData = decrypt(rawData, encryptionAlg);                      //Decrypts if encrypted
@@ -380,6 +386,11 @@ void basicNetworking::getInfo(){
         cout << "IPv6" << endl;
     }
     else cout << "N/A";
+    cout << "Server IP:           ";
+    if (servIP != null){
+        << string(servIP) << endl;
+    }
+    else cout << "N/A" << endl;
     
     cout << endl << "-----------------------------------------------" << endl;
     cout << "Compresion:          ";
@@ -404,6 +415,7 @@ void basicNetworking::getInfo(){
             cout << "AES 128bit" << endl;
         }
         else cout << "Unknown" << endl;
+        cout << "Session Key:         " << sesKey << endl;
     }
     else cout << "False" << endl;
 }
