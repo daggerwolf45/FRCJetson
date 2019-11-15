@@ -12,7 +12,7 @@ bool useCompression = false;
 int compresionAlg;      //(0 = b64pack, 1 = zstd)
 
 bool useEncryption = false;
-int encryptionAlg;      //(0 = nes, 1 = des, 2 = aes)
+int encryptionAlg;      //(0 = nes, 1 = rsa, 2 = aes)
 
 int sockfd = 0, valread; 
 int new_socket;
@@ -356,4 +356,54 @@ string basicNetworking::encrypt(string data, int encryptionAlg){
 string basicNetworking::decrypt(string encryptedData, int encryptionAlg){
     string data;
     return data;
+}
+
+
+/*
+ * Info reporting
+ */
+
+void basicNetworking::getInfo(){
+    cout << "***********************************************" << endl;
+    cout << "BasicNetworkingProtocol v" << BNP_VER " by daggerwolf45" << endl;
+    cout << "***********************************************" << endl << endl;
+    cout << "Is Setup:           " << isSetup << endl;
+    cout << "Client/Server Mode: " << isClient << endl;
+    cout << "Port:               " << userPort << endl;
+    cout << "Max Packet Size:    " << MAXDATASIZE << endl;
+    cout << "Protocol Formating  " << BNP_VER << endl;
+    cout << "IP Protocol         ";
+    if (BN_AFIP = AF_INET){
+        cout << "IPv4" << endl;
+    }
+    else if (BN_AFIP = AF_INET6){
+        cout << "IPv6" << endl;
+    }
+    else cout << "N/A";
+    
+    cout << endl << "-----------------------------------------------" << endl;
+    cout << "Compresion:          ";
+    if (useCompression = true){
+        if (compresionAlg = 0){
+            cout << "b64pack" << endl;
+        }
+        else if (compresionAlg = 1){
+            cout << "zstd" << endl;
+        }
+    }
+    else cout << useCompression << endl;
+    cout << "Encryption:          ";
+    if (useEncryption){                     //nes rsa aes
+        if (encryptionAlg = 0){
+            cout << "NES" << endl;
+        }
+        else if (encryptAlg = 1){
+            cout << "RSA 1024bit" << endl;
+        }
+        else if (encryptAlg = 2){
+            cout << "AES 128bit" << endl;
+        }
+        else cout << "Unknown" << endl;
+    }
+    else cout << "False" << endl;
 }
