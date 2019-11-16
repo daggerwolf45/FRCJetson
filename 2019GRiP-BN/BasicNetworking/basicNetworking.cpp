@@ -8,6 +8,9 @@ bool isSetup = false;
 int userPort = BN_PORT;
 string sesKey;
 
+bool databaseSetup = false;
+const char *bnpDatabase;
+
 bool useCompression = false;
 int compresionAlg;      //(0 = b64pack, 1 = zstd)
 
@@ -21,9 +24,8 @@ char buffer[MAXDATASIZE] = {0};
 
 using namespace std;
 
-basicNetworking::basicNetworking(){
-    
-}
+basicNetworking::basicNetworking(){}
+sqlite3::sqlite3(){}
 
 /*
  * Setup client or server
@@ -224,6 +226,10 @@ int basicNetworking::recvData(int sock){
 }
 
 int basicNetworking::putData(string data){
+    if (!databaseSetup){
+        sqlite3_open(bnpDatabase, );
+        databaseSetup = true;
+    }
     return 0;
 }
 
@@ -375,6 +381,9 @@ void basicNetworking::getInfo(){
     cout << "***********************************************" << endl << endl;
     cout << "Is Setup:           " << isSetup << endl;
     cout << "Client/Server Mode: " << isClient << endl;
+    if (!isClient){
+        cout << "Is database setup:   " << databaseSetup << endl;
+    }
     cout << "Port:               " << userPort << endl;
     cout << "Max Packet Size:    " << MAXDATASIZE << endl;
     cout << "Protocol Formating  " << BNP_VER << endl;
