@@ -97,7 +97,7 @@ int basicNetworking::setupServer(){
     } 
     
     //Listen for connection
-    if (listen(serverfd, 3) < 0){ 
+    if (listen(serverfd, 4) < 0){ 
         perror("listen"); 
         exit(EXIT_FAILURE); 
     } 
@@ -159,7 +159,7 @@ int basicNetworking::sendData(string type, string name, string data){
     mergeData << name << " " << type << " " << data;                        //Combines type, name and data into one string
     data = mergeData.str();                                                 //Sets combined string as data
     
-    datastream << PROT_VER << " ";
+    dataStream << PROT_VER << " ";
 
     if(useCompression){
         data = compress(data, compresionAlg);                               //Compresses data
@@ -193,7 +193,7 @@ int basicNetworking::recvData(int sock){
      * If compression or encryption is used, the type, name and data will be decrypted first then uncompressed
      */
     stringstream unformatedData;
-    int vers
+    int vers;
     bool compresed;
     int compAlg;
     bool encrypted;
@@ -203,7 +203,7 @@ int basicNetworking::recvData(int sock){
     
     valread = read(sock, buffer, MAXDATASIZE);                              //Get data from network
     unformatedData.str(buffer);                                             //Converts char* to string
-    unformatedData >> vers                                                  //Strips protocol version
+    unformatedData >> vers;                                                  //Strips protocol version
     if (vers = 1){
         unformatedData >> compresed >> compAlg >> encrypted >> encryptAlg;  //Strips encryption and compression from data
         unformatedData >> rawData;                                          //Strips type into rawData string
@@ -371,7 +371,7 @@ string basicNetworking::decrypt(string encryptedData, int encryptionAlg){
 
 void basicNetworking::getInfo(){
     cout << "***********************************************" << endl;
-    cout << "BasicNetworkingProtocol v" << BNP_VER " by daggerwolf45" << endl;
+    cout << "BasicNetworkingProtocol v" << BNP_VER << " by daggerwolf45" << endl;
     cout << "***********************************************" << endl << endl;
     cout << "Is Setup:           " << isSetup << endl;
     cout << "Client/Server Mode: " << isClient << endl;
@@ -379,16 +379,16 @@ void basicNetworking::getInfo(){
     cout << "Max Packet Size:    " << MAXDATASIZE << endl;
     cout << "Protocol Formating  " << BNP_VER << endl;
     cout << "IP Protocol         ";
-    if (BN_AFIP = AF_INET){
+    if (BN_AFIP == AF_INET){
         cout << "IPv4" << endl;
     }
-    else if (BN_AFIP = AF_INET6){
+    else if (BN_AFIP == AF_INET6){
         cout << "IPv6" << endl;
     }
     else cout << "N/A";
     cout << "Server IP:           ";
-    if (servIP != null){
-        << string(servIP) << endl;
+    if (servIP != NULL){
+        cout << string(servIP) << endl;
     }
     else cout << "N/A" << endl;
     
@@ -405,13 +405,13 @@ void basicNetworking::getInfo(){
     else cout << useCompression << endl;
     cout << "Encryption:          ";
     if (useEncryption){                     //nes rsa aes
-        if (encryptionAlg = 0){
+        if (encryptionAlg == 0){
             cout << "NES" << endl;
         }
-        else if (encryptAlg = 1){
+        else if (encryptionAlg == 1){
             cout << "RSA 1024bit" << endl;
         }
-        else if (encryptAlg = 2){
+        else if (encryptionAlg == 2){
             cout << "AES 128bit" << endl;
         }
         else cout << "Unknown" << endl;

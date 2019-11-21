@@ -18,8 +18,6 @@
  * BasicNetworking/include/b64pack/b64pack.c BasicNetworking/include/b64pack/compress.c BasicNetworking/include/b64pack/io.c BasicNetworking/include/b64pack/error.c
 */
 
-#include <sqlite.h>
-
 #define BNP_VER 1.0
 #define PROT_VER 1
 #define BN_PORT 663             //Default Port number
