@@ -1,8 +1,26 @@
 #!/bin/bash
 
-YELLOW='\033[1;33m'	#Colors
+YELLOW='\033[1;33m'     #Colors
 NC='\033[0m'
 
+ISOPENCV=''
+
+if [[ $(dpkg-query -W -f='${Status}' libopencv-dev 2>/dev/null | grep -c "ok installed") -eq 0 ]] || [[ $(dpkg-query -W -f='${Status}' libsqlite3-dev 2>/dev/null | grep -c "ok installed") -eq 0 ]]; 
+then
+    echo -n "Required dependancies not found: "
+    if [[ $(dpkg-query -W -f='${Status}' libopencv-dev 2>/dev/null | grep -c "ok installed") -eq 0 ]]; then
+        echo -n "libopencv-dev "
+    fi
+    if [[ $(dpkg-query -W -f='${Status}' libsqlite3-dev 2>/dev/null | grep -c "ok installed") -eq 0 ]]; then
+        echo -n "libsqlite3-dev "
+    fi
+    echo "Would you like to install them? (y/n)"
+    read
+    if [[ $REPLY = 'y' ]]; then
+        sudo apt install --yes -y libopencv-dev libsqlite3-dev
+    fi
+fi
+    
 if [[ ! -d "build" ]]; then
 	mkdir build
 fi
