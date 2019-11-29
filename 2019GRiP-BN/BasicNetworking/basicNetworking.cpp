@@ -30,6 +30,9 @@ basicNetworking::basicNetworking(){
  */
 
 int basicNetworking::setupClient(string strIP){
+    
+    initDB();
+    
     const char *servIP = strIP.c_str();
     if(isSetup){
         close(sockfd);
@@ -59,6 +62,8 @@ int basicNetworking::setupClient(string strIP){
         cout << "Could not connect to server at: " << servIP << endl;
         return -1; 
     } 
+    
+    
     
     isSetup = true;
     isClient = true;
@@ -107,7 +112,7 @@ int basicNetworking::setupServer(){
         exit(EXIT_FAILURE); 
     } 
     
-
+    initDB();
     
     isSetup = true;
     isClient = false;
@@ -118,6 +123,34 @@ int basicNetworking::setupServer(){
     //send(new_socket , hello , strlen(hello) , 0 ); 
     //printf("Hello message sent\n"); 
     //return 0;
+}
+
+int basicNetworking::initDB(){
+    sqlite3 *db;
+    char *zErrMsg = 0;
+    int rc;
+    
+    cout << "Starting SQLite" << endl;
+    rc = sqlite3_open("database.sqlite", &db);
+    if (rc){
+        cout << "Failed to open database: " << sqlite3_errmsg(db) <<endl;
+        sqlite3_close(db);
+    }
+    
+    cout << "Creating table..."<< endl;
+    rc = sqlite3_exec(db, "CREATE TABLE a (col1 int, col2 int, col3 int)", NULL, 0, &zErrMsg);
+    
+    if (rc){
+        cout << "SQL ERROR: " << zErrMsg <<endl;
+        sqlite3_close(db);
+    }
+    
+    cout << "Finishing SQLite Setup..." << endl;
+    
+    sqlite3_close(db);
+    
+    cout << "Fin" << endl;
+    
 }
 
 int basicNetworking::usePort(int port){
@@ -224,6 +257,8 @@ int basicNetworking::recvData(int sock){
 }
 
 int basicNetworking::putData(string data){
+    
+    
     return 0;
 }
 

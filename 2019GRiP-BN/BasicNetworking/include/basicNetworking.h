@@ -18,12 +18,16 @@
  * BasicNetworking/include/b64pack/b64pack.c BasicNetworking/include/b64pack/compress.c BasicNetworking/include/b64pack/io.c BasicNetworking/include/b64pack/error.c
 */
 
+#include "sqlite3.h"
+
 #define BNP_VER 1.0
 #define PROT_VER 1
 #define BN_PORT 663             //Default Port number
 #define MAXDATASIZE 1024        //Max data in bytes
 #define BN_AFIP AF_INET         //ipv4(inet) or ipv6(inet6)
 #define BN_PROT SOCK_STREAM     //tcp(stream) or udp (dpack)
+
+#define DB_NAME "database.sqlite"
 
 using namespace std;
 
@@ -44,6 +48,9 @@ class basicNetworking {
         int recvHandshake(int sock);
         string encrypt(string data, int encryptionAlg);
         string decrypt(string encryptedData, int encryptionAlg);
+        
+        //Sqlite3
+        int initDB();
     public:
         basicNetworking();
         
@@ -70,7 +77,7 @@ class basicNetworking {
         float getFloat(string name);
         int getInt(string name);
         string getStr(string name);
-    
+       
 };
 
 #endif
