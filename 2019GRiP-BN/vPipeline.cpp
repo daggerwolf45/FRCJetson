@@ -31,14 +31,13 @@ int main( int argc, char *argv[] ){
     cv::Mat img;
     grip::GripPipeline vPipeline;
     cv::VideoCapture input(0);
-
-  
+    
     //Setup NetworkTables
     cout << "Setting up networking (2/2)" << endl;
     bn.setupClient(robotIP);
-    cout << "Finished Setup" << endl;
-   
-    cout << "Starting Pipeline" << endl;
+    cout << "Finished Setup" << endl << endl;
+    bn.getInfo();
+    cout << endl << "Starting Pipeline" << endl;
   
     for (;;){
         // STEP 1: fetch image

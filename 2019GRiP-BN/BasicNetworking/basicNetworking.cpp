@@ -19,6 +19,9 @@ int new_socket;
 const char *servIP;
 char buffer[MAXDATASIZE] = {0};
 
+sqlite3 *db;
+bool databaseOpen = false;
+
 using namespace std;
 
 basicNetworking::basicNetworking(){
@@ -29,10 +32,8 @@ basicNetworking::basicNetworking(){
  * Setup client or server
  */
 
-int basicNetworking::setupClient(string strIP){
-    
+int basicNetworking::setupClient(string strIP, bool dontStop){
     initDB();
-    
     const char *servIP = strIP.c_str();
     if(isSetup){
         close(sockfd);
@@ -57,13 +58,21 @@ int basicNetworking::setupClient(string strIP){
         return -1; 
     } 
     
-    if (connect(sockfd, (struct sockaddr *)&serv_addr, sizeof(serv_addr)) < 0)    //Connect to robot
-    { 
-        cout << "Could not connect to server at: " << servIP << endl;
-        return -1; 
-    } 
-    
-    
+    if (dontStop){
+        bool connected = false;
+        while(!connected){
+                if (connect(sockfd, (struct sockaddr *)&serv_addr, sizeof(serv_addr)) < 0){    //Connect to robot
+                    cout << "Could not connect to server at: " << servIP << endl;
+                    sleep(3);
+            }
+        }
+    }
+    else {
+        if (connect(sockfd, (struct sockaddr *)&serv_addr, sizeof(serv_addr)) < 0){    //Connect to robot
+            cout << "Could not connect to server at: " << servIP << endl;
+            return -1; 
+        }
+    }
     
     isSetup = true;
     isClient = true;
@@ -75,7 +84,7 @@ int basicNetworking::setupClient(string strIP){
     //return 0; 
 }
 
-int basicNetworking::setupServer(){
+int basicNetworking::setupServer(bool dontStop){
     int serverfd, new_socket, valread; 
     struct sockaddr_in address; 
     int addrlen = sizeof(address); 
@@ -86,7 +95,7 @@ int basicNetworking::setupServer(){
         exit(EXIT_FAILURE); 
     } 
     
-    // Forcefully attaching socket to the port 8080 
+    // FodbErrorefully attaching socket to the port 8080 
     if (setsockopt(serverfd, SOL_SOCKET, SO_REUSEADDR | SO_REUSEPORT, &opt, sizeof(opt))){ 
         perror("setsockopt"); 
         exit(EXIT_FAILURE); 
@@ -95,7 +104,7 @@ int basicNetworking::setupServer(){
     address.sin_addr.s_addr = INADDR_ANY; 
     address.sin_port = htons(userPort);
     
-    // Forcefully attaching socket to the port 8080 
+    // FodbErrorefully attaching socket to the port 8080 
     if (bind(serverfd, (struct sockaddr *)&address, sizeof(address))<0){ 
         perror("bind failed"); 
         exit(EXIT_FAILURE); 
@@ -126,31 +135,31 @@ int basicNetworking::setupServer(){
 }
 
 int basicNetworking::initDB(){
-    sqlite3 *db;
     char *zErrMsg = 0;
-    int rc;
-    
-    cout << "Starting SQLite" << endl;
-    rc = sqlite3_open("database.sqlite", &db);
-    if (rc){
+    int dbError;
+   
+    dbError = sqlite3_open(DB_NAME, &db);
+    if (dbError){
         cout << "Failed to open database: " << sqlite3_errmsg(db) <<endl;
+        databaseOpen = false;
         sqlite3_close(db);
     }
+    else databaseOpen = true;
     
-    cout << "Creating table..."<< endl;
-    rc = sqlite3_exec(db, "CREATE TABLE a (col1 int, col2 int, col3 int)", NULL, 0, &zErrMsg);
+    if (!doesDBExist()){
+        dbError = sqlite3_exec(db, "CREATE TABLE BNP1 (name string, type string, data string)", NULL, 0, &zErrMsg);
     
-    if (rc){
-        cout << "SQL ERROR: " << zErrMsg <<endl;
-        sqlite3_close(db);
+        if (dbError){
+            cout << "SQL ERROR: " << zErrMsg <<endl;
+            databaseOpen = false;
+            sqlite3_close(db);
+        }
     }
-    
-    cout << "Finishing SQLite Setup..." << endl;
-    
-    sqlite3_close(db);
-    
-    cout << "Fin" << endl;
-    
+}
+
+bool basicNetworking::doesDBExist(){
+    string name = DB_NAME;
+    return ( access( name.c_str(), F_OK) != -1 );
 }
 
 int basicNetworking::usePort(int port){
@@ -159,7 +168,11 @@ int basicNetworking::usePort(int port){
 }
 
 void basicNetworking::quit(){
+    isSetup = false;
     close(sockfd);
+    
+    databaseOpen = false;
+    sqlite3_close(db);
 }
 
 int basicNetworking::genKey(){
@@ -181,6 +194,9 @@ int basicNetworking::sendData(string type, string name, string data){
      * 
      * If compression or encryption is used the type, name and data will be compressed first then encrypted
      */
+    if (!isSetup){
+        return 1;
+    }
     
     stringstream dataStream;
     stringstream mergeData;
@@ -257,7 +273,14 @@ int basicNetworking::recvData(int sock){
 }
 
 int basicNetworking::putData(string data){
+    int dbError;
     
+    if (!db){
+        initDB();
+        if (!db){
+            return 1;
+        }
+    }
     
     return 0;
 }
@@ -429,7 +452,7 @@ void basicNetworking::getInfo(){
     
     cout << endl << "-----------------------------------------------" << endl;
     cout << "Compresion:          ";
-    if (useCompression = true){
+    if (useCompression){
         if (compresionAlg = 0){
             cout << "b64pack" << endl;
         }
@@ -453,4 +476,8 @@ void basicNetworking::getInfo(){
         cout << "Session Key:         " << sesKey << endl;
     }
     else cout << "False" << endl;
+    
+    cout << endl << "-----------------------------------------------" << endl;
+    cout << "Does database exist:" << bool(doesDBExist()) << endl;
+    
 }

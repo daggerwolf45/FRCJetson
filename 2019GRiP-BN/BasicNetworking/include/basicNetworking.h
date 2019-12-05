@@ -51,12 +51,13 @@ class basicNetworking {
         
         //Sqlite3
         int initDB();
+        bool doesDBExist();
     public:
         basicNetworking();
         
         //Basic setup
-        int setupClient(string ServerAddr);
-        int setupServer();
+        int setupClient(string ServerAddr, bool dontStop = false);
+        int setupServer(bool dontStop = false);
         int usePort(int port);
         void quit();
         int compressData(int compression, bool enable);
