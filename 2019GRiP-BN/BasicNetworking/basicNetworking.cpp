@@ -387,12 +387,12 @@ string basicNetworking::compress(string data, int compresionAlg){
     //size_t foolen = get_message(&foo);
     //b64pack_compress(foo, &foolen);
     
-    string compressedData;
+    string compressedData = data;
     return compressedData;
 }
 
 string basicNetworking::uncompress(string compressedData, int compresionAlg){
-    string data;
+    string data = compressData;
     return data;
 }
 
@@ -413,12 +413,12 @@ int basicNetworking::encryptData(int alg, bool enable){
 }
 
 string basicNetworking::encrypt(string data, int encryptionAlg){
-    string encryptedData;
+    string encryptedData = data;
     return encryptedData;
 }
 
 string basicNetworking::decrypt(string encryptedData, int encryptionAlg){
-    string data;
+    string data = encryptedData;
     return data;
 }
 
