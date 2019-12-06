@@ -135,8 +135,7 @@ int basicNetworking::setupServer(bool dontStop){
 }
 
 int basicNetworking::initDB(){
-    char *zErrMsg = 0;
-    int dbError;
+   int dbError;
    
     dbError = sqlite3_open(DB_NAME, &db);
     if (dbError){
@@ -147,19 +146,36 @@ int basicNetworking::initDB(){
     else databaseOpen = true;
     
     if (!doesDBExist()){
-        dbError = sqlite3_exec(db, "CREATE TABLE BNP1 (name string, type string, data string)", NULL, 0, &zErrMsg);
-    
-        if (dbError){
-            cout << "SQL ERROR: " << zErrMsg <<endl;
+        if (sqliteExec("CREATE TABLE BNP1 (name string, type string, data string)")){
+            cout << "Could not create BNP1 table" << endl;
             databaseOpen = false;
             sqlite3_close(db);
+            return -1;
         }
     }
+    return 0;
 }
 
 bool basicNetworking::doesDBExist(){
     string name = DB_NAME;
     return ( access( name.c_str(), F_OK) != -1 );
+}
+
+int basicNetworking::sqliteExec(string command){
+    char *zErrMsg = 0;
+    int dbError;
+    
+    //TODO Check database is open
+    
+    dbError = sqlite3_exec(db, command.c_str(), NULL, 0, &zErrMsg);
+    
+    if (dbError){
+        cout << "SQL ERROR: " << zErrMsg <<endl;
+        databaseOpen = false;
+        sqlite3_close(db);
+        return -1;
+    }
+    return 0;
 }
 
 int basicNetworking::usePort(int port){
@@ -236,13 +252,13 @@ int basicNetworking::sendData(string type, string name, string data){
 int basicNetworking::recvData(int sock){
      /* NOTE 
      * Recives data in the format: 
-     * PROT_VER(int) useCompression(0/1) compresionAlg(int) useEncryption(0/1) encryptionAlg(int) dataType("double") name("coolNumber") data("420.69")
+     * PROT_VER(float) useCompression(0/1) compresionAlg(int) useEncryption(0/1) encryptionAlg(int) dataType("double") name("coolNumber") data("420.69")
      * 1 0 0 0 0 double coolNumber 420.69
      * 
      * If compression or encryption is used, the type, name and data will be decrypted first then uncompressed
      */
     stringstream unformatedData;
-    int vers;
+    float vers;
     bool compresed;
     int compAlg;
     bool encrypted;
@@ -267,20 +283,33 @@ int basicNetworking::recvData(int sock){
     if(compresed){
         rawData = uncompress(rawData, encryptionAlg);                   //Uncompresses if compressed
     }
-    
+   
     putData(rawData);                                                   //Runs putData() so data can be indexed
     return 0;
 }
 
-int basicNetworking::putData(string data){
+int basicNetworking::putData(string rawData){
     int dbError;
+    string name, type, data;
+    stringstream values, datastream;
     
-    if (!db){
+    datastream << rawData;
+    
+    datastream >> name;
+    datastream >> type;
+    data = datastream.str();
+    
+    values << "VALUES ('" << name << "', '" << type << "', '" << data << "')";
+    
+    if (!databaseOpen && !db){
         initDB();
-        if (!db){
-            return 1;
+        if (!databaseOpen && !db){
+            return -1;
         }
     }
+    
+    sqliteExec("INSERT INTO BNP1 (name, type, data)");
+    sqliteExec(values.str());
     
     return 0;
 }
@@ -392,7 +421,7 @@ string basicNetworking::compress(string data, int compresionAlg){
 }
 
 string basicNetworking::uncompress(string compressedData, int compresionAlg){
-    string data = compressData;
+    string data = compressedData;
     return data;
 }
 
@@ -479,5 +508,4 @@ void basicNetworking::getInfo(){
     
     cout << endl << "-----------------------------------------------" << endl;
     cout << "Does database exist:" << bool(doesDBExist()) << endl;
-    
 }

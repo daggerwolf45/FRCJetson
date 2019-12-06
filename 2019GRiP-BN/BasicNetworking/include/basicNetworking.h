@@ -21,7 +21,7 @@
 #include "sqlite3.h"
 
 #define BNP_VER 1.0
-#define PROT_VER 1
+#define PROT_VER 1.0
 #define BN_PORT 663             //Default Port number
 #define MAXDATASIZE 1024        //Max data in bytes
 #define BN_AFIP AF_INET         //ipv4(inet) or ipv6(inet6)
@@ -52,6 +52,7 @@ class basicNetworking {
         //Sqlite3
         int initDB();
         bool doesDBExist();
+        int sqliteExec(string command);
     public:
         basicNetworking();
         
