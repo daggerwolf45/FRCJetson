@@ -70,7 +70,8 @@ class basicNetworking {
         int sendDouble(string name, double num);
         int sendFloat(string name, float num);
         int sendInt(string name, int num);
-        int sendStr(string name, string str);
+        int sendString(string name, string str);
+        int sendBool(string name, bool val);
         //int sendOther();
         
         //Recive data

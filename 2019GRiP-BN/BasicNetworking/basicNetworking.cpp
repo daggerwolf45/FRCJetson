@@ -334,7 +334,7 @@ int basicNetworking::sendChar(string name, char chr){
     }
 }
 
-int basicNetworking::sendStr(string name, string str){
+int basicNetworking::sendString(string name, string str){
     if(isSetup){
         if(isClient){
             sendData("string", name, str);
@@ -352,6 +352,21 @@ int basicNetworking::sendInt(string name, int num){
     if(isSetup){
         if(isClient){
             sendData("int", name, to_string(num));
+            return 0;
+        }
+        else{return 0;}
+    } 
+    else {
+        cout << "BN Error: No server connection found, please run setup" << endl;
+        return -1;
+    }
+}
+
+int basicNetworking::sendBool(string name, bool val){
+    int num = val;
+    if(isSetup){
+        if(isClient){
+            sendData("bool", name, to_string(num));
             return 0;
         }
         else{return 0;}
@@ -473,14 +488,14 @@ void basicNetworking::getInfo(){
         cout << "IPv6" << endl;
     }
     else cout << "N/A";
-    cout << "Server IP:           ";
+    cout << "Server IP:          ";
     if (servIP != NULL){
         cout << string(servIP) << endl;
     }
     else cout << "N/A" << endl;
     
     cout << endl << "-----------------------------------------------" << endl;
-    cout << "Compresion:          ";
+    cout << "Compresion:         ";
     if (useCompression){
         if (compresionAlg = 0){
             cout << "b64pack" << endl;
@@ -490,7 +505,7 @@ void basicNetworking::getInfo(){
         }
     }
     else cout << useCompression << endl;
-    cout << "Encryption:          ";
+    cout << "Encryption:         ";
     if (useEncryption){                     //nes rsa aes
         if (encryptionAlg == 0){
             cout << "NES" << endl;

@@ -4,7 +4,7 @@ using namespace std;
 
 int debug = 0;
 int contourcount = 0;
-bool setZero = true;
+bool lockedOn = true;
 double brx[5];
 double bry[5];
 double brw[2];
@@ -83,16 +83,18 @@ int main( int argc, char *argv[] ){
             cout << "Sending center to robot";
             bn.sendDouble("centerX", tcx);
             bn.sendDouble("centerY", tcy);
-            setZero = false;
-        } else if(!setZero){
-            bn.sendDouble("centerX", 0.0);
-            bn.sendDouble("centerY", 0.0);
-            setZero = true;
+            if (!lockedOn){
+                lockedOn = true;
+                bn.sendBool("lockedOn", lockedOn);
+            }
+            
+        } else if (lockedOn){
+            lockedOn = false;
+            bn.sendBool("lockedOn", lockedOn);
         }
-
+        
     }
-  
-
+    
 }
 
 
