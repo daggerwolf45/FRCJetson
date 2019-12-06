@@ -43,7 +43,7 @@ int main( int argc, char *argv[] ){
         // STEP 1: fetch image
         if(!input.read(img))
         break;
-  	
+  	false
         // STEP 2: setup image pipeline
         //vPipeline.setsource0(img);
         vPipeline.Process(img);
