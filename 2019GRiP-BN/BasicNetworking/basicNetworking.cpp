@@ -6,6 +6,7 @@
 bool isClient;
 bool isSetup = false;
 int userPort = BN_PORT;
+bool returnNull = true;
 string sesKey;
 
 bool useCompression = false;
@@ -20,7 +21,8 @@ const char *servIP;
 char buffer[MAXDATASIZE] = {0};
 
 sqlite3 *db;
-bool databaseOpen = false;
+bool sqliteFI, databaseOpen = false;
+string sqliteFD = "", sqliteFT = "";
 
 using namespace std;
 
@@ -32,8 +34,12 @@ basicNetworking::basicNetworking(){
  * Setup client or server
  */
 
-int basicNetworking::setupClient(string strIP, bool dontStop){
+int basicNetworking::setupClient(string strIP, bool dontStop, bool eraseOldDB){
+    if (eraseOldDB){
+        clearDB(DB_NAME);
+    }
     initDB();
+    
     const char *servIP = strIP.c_str();
     if(isSetup){
         close(sockfd);
@@ -84,7 +90,7 @@ int basicNetworking::setupClient(string strIP, bool dontStop){
     //return 0; 
 }
 
-int basicNetworking::setupServer(bool dontStop){
+int basicNetworking::setupServer(bool dontStop, bool eraseOldDB){
     int serverfd, new_socket, valread; 
     struct sockaddr_in address; 
     int addrlen = sizeof(address); 
@@ -121,6 +127,10 @@ int basicNetworking::setupServer(bool dontStop){
         exit(EXIT_FAILURE); 
     } 
     
+    if (eraseOldDB){
+        clearDB(DB_NAME);
+    }
+    
     initDB();
     
     isSetup = true;
@@ -132,50 +142,6 @@ int basicNetworking::setupServer(bool dontStop){
     //send(new_socket , hello , strlen(hello) , 0 ); 
     //printf("Hello message sent\n"); 
     //return 0;
-}
-
-int basicNetworking::initDB(){
-   int dbError;
-   
-    dbError = sqlite3_open(DB_NAME, &db);
-    if (dbError){
-        cout << "Failed to open database: " << sqlite3_errmsg(db) <<endl;
-        databaseOpen = false;
-        sqlite3_close(db);
-    }
-    else databaseOpen = true;
-    
-    if (!doesDBExist()){
-        if (sqliteExec("CREATE TABLE BNP1 (name string, type string, data string)")){
-            cout << "Could not create BNP1 table" << endl;
-            databaseOpen = false;
-            sqlite3_close(db);
-            return -1;
-        }
-    }
-    return 0;
-}
-
-bool basicNetworking::doesDBExist(){
-    string name = DB_NAME;
-    return ( access( name.c_str(), F_OK) != -1 );
-}
-
-int basicNetworking::sqliteExec(string command){
-    char *zErrMsg = 0;
-    int dbError;
-    
-    //TODO Check database is open
-    
-    dbError = sqlite3_exec(db, command.c_str(), NULL, 0, &zErrMsg);
-    
-    if (dbError){
-        cout << "SQL ERROR: " << zErrMsg <<endl;
-        databaseOpen = false;
-        sqlite3_close(db);
-        return -1;
-    }
-    return 0;
 }
 
 int basicNetworking::usePort(int port){
@@ -195,6 +161,200 @@ int basicNetworking::genKey(){
     srand(time(0)*userPort);
     int ikey = rand();
     string sesKey = to_string(ikey);
+    return 0;
+}
+
+void basicNetworking::returnZero(bool zero){
+    returnNull=!zero;
+}
+
+/*
+ * SQLite Wrapper Functions
+ */
+
+int basicNetworking::initDB(){
+    int dbError;
+    int prevRn = doesDBExist();
+   
+    dbError = sqlite3_open(DB_NAME, &db);
+    if (dbError){
+        cout << "Failed to open database: " << sqlite3_errmsg(db) <<endl;
+        databaseOpen = false;
+        sqlite3_close(db);
+    }
+    else databaseOpen = true;
+    
+    if (!prevRn){
+        if (sqliteExec("create table BNP1 (id integer primary key, name text not NULL, type text not NULL, data text not NULL)", false)){
+            cout << "Could not create BNP1 table" << endl;
+            databaseOpen = false;
+            sqlite3_close(db);
+            return -1;
+        }
+        
+        sqliteInsert("insert into BNP1 (name, type, data) values ('coolNumber', 'double', '420.69')");
+        
+    }
+    
+    stringstream text;
+    text << "insert into BNP1 (name, type, data) values ('CurTime', 'int', '" << time(0) << "')";
+    sqliteInsert(text.str());
+    
+    return 0;
+}
+
+bool basicNetworking::doesDBExist(){
+    string name = DB_NAME;
+    return ( access( name.c_str(), F_OK) != -1 );
+}
+
+bool basicNetworking::isDBOpen(string funcName){
+    if(isSetup){
+        if (!db || !databaseOpen){
+            initDB();
+            if (!db || !databaseOpen){
+                cout << "DB ERROR: " << funcName << "() unable to locate/open database" << endl;
+                return false;
+            }
+        }
+    }
+    return true;
+}
+
+int basicNetworking::clearDB(string database){
+    if (isDBOpen("clearDB")){
+        databaseOpen = false;
+        sqlite3_close(db);
+    }
+    
+    if (remove(database.c_str())){
+        return 0;
+    }
+    else{
+        cout << "BN ERROR: Unable to clear database: " << database << endl;
+        return -1;
+    }
+}
+
+void basicNetworking::clearTmpVars(){
+    sqliteFI = false;
+    sqliteFD = "";
+    sqliteFI = "";
+}
+
+int sqliteCallback(void *unused, int count, char **data, char **column){
+    if (count > 0){
+        sqliteFI = true;
+        cout << "sqlite found: " << count << " items" << endl;
+        if (count == 4){
+            sqliteFD = data[3];
+            sqliteFT = data[2];
+            cout << "Found data: " << sqliteFT << " " << sqliteFD << endl;
+        }
+        else{
+            sqliteFD = "";
+        }
+    }
+    else {
+        count = 0;
+        sqliteFI = false;
+        sqliteFD = "";
+        sqliteFI = "";
+        cout << "sqlite found: " << count << " items" << endl;
+    }
+  
+    return 0;
+}
+
+int basicNetworking::sqliteExec(string command, bool giveReturn = false){
+    char *zErrMsg = 0;
+    int dbError;
+    
+    if (!isDBOpen("sqliteInsert")){
+        return -1;
+    }
+    
+    dbError = sqlite3_exec(db, command.c_str(), sqliteCallback, 0, &zErrMsg);
+    
+   if ( dbError != SQLITE_OK ){
+        cout << "SQL ERROR: " << zErrMsg <<endl;
+        databaseOpen = false;
+        sqlite3_free(zErrMsg);
+        sqlite3_close(db);
+        return -1;
+    } 
+    
+    if (giveReturn){
+        
+    }
+    
+    return 0;
+}
+
+int basicNetworking::sqliteInsert(string command){
+    stringstream commandStream;
+    string commandHead;
+    
+    if (!isDBOpen("sqliteInsert")){
+        return -1;
+    }
+    
+    commandStream.str(command);
+    commandStream >> commandHead;
+    
+    if (commandHead == "insert" || commandHead == "INSERT"){
+        string name, tab, nil, tmp;
+        stringstream puller, selectComm;
+        
+        tmp = command;
+        tmp.erase(0,12);
+        
+        puller.str(tmp);
+        puller >> tab;
+        
+        if (tab == "BNP1"){
+            tmp.erase(0, 33);
+            
+            puller.str(tmp);
+            puller >> name;
+            
+            name.erase(name.end()-2, name.end());
+            
+        }
+        else {
+            cout << "BN ERROR: Unknown data format in sqliteInsert()" << endl;
+            return -3;
+        }
+        
+        selectComm << "select * from " << tab << " where name = '" << name << "'";
+        sqliteExec(selectComm.str(), true);
+        /*
+         * NOTE This is a VERY NOT PERMANANT CHECK!! This SHOULD just be a return from sqliteExec() or sqliteSelect() NOTE
+         */
+        if (sqliteFI){
+            string type, data;
+            stringstream newCommand, partA, partB;
+            if (tab == "BNP1"){
+                puller >> type >> data;
+                
+                type.erase(0,1);
+                type.erase(type.end()-2, type.end());
+                data.erase(0,1);
+                data.erase(data.end()-2, data.end());
+                
+                partA << "update " << tab << " set data = '" << data << "' where name = '" << name << "'; ";
+                partA << "update " << tab << " set type = '" << type << "' where name = '" << name << "'";
+                newCommand << partA.str() << partB.str();
+                command = newCommand.str();
+            }
+        }
+    }
+    else {
+        cout << "BN ERROR: sqliteInsert() used for non insert command..." << endl;
+        return -2;
+    }
+    
+    sqliteExec(command);
     return 0;
 }
 
@@ -291,31 +451,50 @@ int basicNetworking::recvData(int sock){
 int basicNetworking::putData(string rawData){
     int dbError;
     string name, type, data;
-    stringstream values, datastream;
-    
+    stringstream inserts, datastream;
     datastream << rawData;
     
-    datastream >> name;
-    datastream >> type;
-    data = datastream.str();
+    datastream >> name >> type;
+    datastream >> data; //TODO add support for data with spaces...
     
-    values << "VALUES ('" << name << "', '" << type << "', '" << data << "')";
-    
-    if (!databaseOpen && !db){
-        initDB();
-        if (!databaseOpen && !db){
-            return -1;
-        }
+    inserts << "insert into BNP1 (name, type, data) values ('" << name << "', '" << type << "', '" << data << "')";
+    if (!isDBOpen("putData")){
+        return -1;
     }
     
-    sqliteExec("INSERT INTO BNP1 (name, type, data)");
-    sqliteExec(values.str());
+    sqliteInsert(inserts.str());
     
     return 0;
 }
 
+int basicNetworking::getData(string name, string type){
+    stringstream command;
+    if (!isDBOpen("getData")){
+            return -1;
+    }
+    
+    command << "select * from BNP1 where name = '" << name << "'";
+    sqliteExec(command.str());
+    
+    if (sqliteFI){
+        if (sqliteFT == type){
+            return 0;
+        }
+        else {
+            cout << "DB ERROR: '" << name << "' is of type '" << sqliteFT << "' instead of requested type 'int'\n";
+            clearTmpVars();
+            return -3;
+        }
+    }
+    else {
+        cout << "DB ERROR: Could not get '" << name <<"'. It was not found in database, it may not have been recived yet";
+        clearTmpVars();
+        return -2;
+    }
+}
+
 /*
- * Choose type of data
+ * Send a type of data
  */
 
 int basicNetworking::sendChar(string name, char chr){
@@ -403,6 +582,113 @@ int basicNetworking::sendDouble(string name, double num){
         cout << "BN Error: No server connection found, please run setup" << endl;
         return -1;
     }
+}
+
+/*
+ * Get data from database   TODO
+ */
+
+char basicNetworking::getChar(string name){
+    char data;
+    stringstream stoc;
+    
+    if (!isSetup){
+        cout << "DB ERROR: getChar(), BNP is not currently setup, please run setupClient/Server() first.\n";
+        return NULL;
+    }
+    
+    getData(name, "char");
+        
+    stoc.str(sqliteFD);
+    stoc >> data;
+    
+    clearTmpVars();
+    return data;
+    
+}
+
+string basicNetworking::getString(string name){
+    string data;
+    
+    if (!isSetup){
+        cout << "DB ERROR: getString(), BNP is not currently setup, please run setupClient/Server() first.\n";
+        return NULL;
+    }
+   
+    getData(name, "string");
+    data = sqliteFD;
+    
+    clearTmpVars();
+    return data;
+}
+
+bool basicNetworking::getBool(string name){
+    bool data, bar;
+    stringstream foo;
+
+    if (!isSetup){
+        cout << "DB ERROR: getBool(), BNP is not currently setup, please run setupClient/Server() first.\n";
+        return NULL;
+    }
+    
+    getData(name, "bool");
+    
+    foo.str(sqliteFD);
+    foo >> bar;
+    if (bar){
+        data = true;
+    }
+    else {
+        data = false;
+    }
+    
+    clearTmpVars();
+    return data;
+}
+
+int basicNetworking::getInt(string name){
+    int data;
+    
+    if (!isSetup){
+        cout << "DB ERROR: getInt(), BNP is not currently setup, please run setupClient/Server() first.\n";
+        return NULL;
+    }
+   
+    getData(name, "int");
+    data = stoi(sqliteFD);
+    
+    clearTmpVars();
+    return data;
+}
+
+float basicNetworking::getFloat(string name){
+    float data;
+    
+    if (!isSetup){
+        cout << "DB ERROR: getFloat(), BNP is not currently setup, please run setupClient/Server() first.\n";
+        return NULL;
+    }
+   
+    getData(name, "float");
+    data = stof(sqliteFD);
+    
+    clearTmpVars();
+    return data;
+}
+
+double basicNetworking::getDouble(string name){
+    double data;
+    
+    if (!isSetup){
+        cout << "DB ERROR: getDouble(), BNP is not currently setup, please run setupClient/Server() first.\n";
+        return NULL;
+    }
+   
+    getData(name, "double");
+    data = stod(sqliteFD);
+    
+    clearTmpVars();
+    return data;
 }
 
 /*

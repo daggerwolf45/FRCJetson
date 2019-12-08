@@ -37,6 +37,7 @@ class basicNetworking {
         int sendData(string type, string name, string data);
         int recvData(int sock);
         int putData(string data);
+        int getData(string name,string type);
         
         //Compresion stuffs
         string compress(string data, int compresionAlg);
@@ -52,18 +53,23 @@ class basicNetworking {
         //Sqlite3
         int initDB();
         bool doesDBExist();
-        int sqliteExec(string command);
+        bool isDBOpen(string funcName);
+        int sqliteExec(string command, bool giveReturn);     //Used to run ANY sqlite3 command
+        int sqliteInsert(string command);  //ONLY used to run insert commands, will update database instead of insert if nessisary
+        void clearTmpVars();
     public:
         basicNetworking();
         
         //Basic setup
-        int setupClient(string ServerAddr, bool dontStop = false);
-        int setupServer(bool dontStop = false);
+        int setupClient(string ServerAddr, bool dontStop = false, bool eraseOldDB = true);
+        int setupServer(bool dontStop = false, bool eraseOldDB = true);
         int usePort(int port);
         void quit();
         int compressData(int compression, bool enable);
         int encryptData(int encryption, bool enable);
         void getInfo();
+        int clearDB(string database = DB_NAME);
+        void returnZero(bool zero);
         
         //Send data
         int sendChar(string name, char data);
@@ -79,7 +85,8 @@ class basicNetworking {
         double getDouble(string name);
         float getFloat(string name);
         int getInt(string name);
-        string getStr(string name);
+        string getString(string name);
+        bool getBool(string name);
        
 };
 

@@ -34,7 +34,7 @@ int main( int argc, char *argv[] ){
     
     //Setup NetworkTables
     cout << "Setting up networking (2/2)" << endl;
-    bn.setupClient(robotIP);
+    bn.setupClient(robotIP, false, false);
     cout << "Finished Setup" << endl << endl;
     bn.getInfo();
     cout << endl << "Starting Pipeline" << endl;
@@ -43,7 +43,7 @@ int main( int argc, char *argv[] ){
         // STEP 1: fetch image
         if(!input.read(img))
         break;
-  	false
+  	
         // STEP 2: setup image pipeline
         //vPipeline.setsource0(img);
         vPipeline.Process(img);
