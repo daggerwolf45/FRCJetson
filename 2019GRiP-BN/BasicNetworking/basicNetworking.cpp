@@ -227,7 +227,7 @@ int basicNetworking::clearDB(string database){
         sqlite3_close(db);
     }
     
-    if (remove(database.c_str())){
+    if (!remove(database.c_str())){
         return 0;
     }
     else{
