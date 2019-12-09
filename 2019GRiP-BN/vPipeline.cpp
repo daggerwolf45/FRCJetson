@@ -34,7 +34,7 @@ int main( int argc, char *argv[] ){
     
     //Setup NetworkTables
     cout << "Setting up networking (2/2)" << endl;
-    bn.setupClient(robotIP, false, false);
+    bn.setupClient(robotIP, true, true);
     cout << "Finished Setup" << endl << endl;
     bn.getInfo();
     cout << endl << "Starting Pipeline" << endl;

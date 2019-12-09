@@ -245,11 +245,9 @@ void basicNetworking::clearTmpVars(){
 int sqliteCallback(void *unused, int count, char **data, char **column){
     if (count > 0){
         sqliteFI = true;
-        cout << "sqlite found: " << count << " items" << endl;
         if (count == 4){
             sqliteFD = data[3];
             sqliteFT = data[2];
-            cout << "Found data: " << sqliteFT << " " << sqliteFD << endl;
         }
         else{
             sqliteFD = "";
@@ -260,7 +258,6 @@ int sqliteCallback(void *unused, int count, char **data, char **column){
         sqliteFI = false;
         sqliteFD = "";
         sqliteFI = "";
-        cout << "sqlite found: " << count << " items" << endl;
     }
   
     return 0;
